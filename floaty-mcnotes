@@ -1,0 +1,3 @@
+Golang:
+
+new package: go mod init github.com/wxllxm/project-name

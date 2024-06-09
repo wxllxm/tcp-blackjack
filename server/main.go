@@ -16,7 +16,7 @@ func main() {
 
 	defer listener.Close()
 
-	fmt.Printf("Listening on: %s\n", address)
+	fmt.Printf("Listening for connections on: %s\n", address)
 
 	for {
 		conn, err := listener.Accept()
@@ -25,17 +25,33 @@ func main() {
 			continue
 		}
 
-		reader := bufio.NewReader(conn)
+		go handleConnection(conn)
+	}
+}
 
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+
+	reader := bufio.NewReader(conn)
+
+	for {
 		data, err := reader.ReadString('\n')
+
+		fmt.Printf("Recieved: %s", data)
+
 		if err != nil {
-			fmt.Printf("Error: there was an error reading data: %s\n", err.Error())
+			if err.Error() == "EOF" {
+				fmt.Printf("Client closed the connection\n")
+			} else {
+				fmt.Printf("Error: there was an error reading data %s\n", err.Error())
+			}
 			return
 		}
 
-		fmt.Printf("Received: %s", data)
-		conn.Write([]byte(string(data)))
-		conn.Close()
+		_, err = conn.Write([]byte(data))
+		if err != nil {
+			fmt.Printf("Error: there was an error sending data: %s\n", err.Error())
+			return
+		}
 	}
-
 }
